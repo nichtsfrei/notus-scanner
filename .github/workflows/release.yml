@@ -136,11 +136,12 @@ jobs:
       - run: mkdir assets/
       - name: release ${{ env.LATEST_VERSION }} -> ${{ env.NEW_VERSION }}
         run: |
+          export PROJECT=$(echo "${{ env.GITHUB_REPOSITORY }}" | sed 's/.*\///' )
           pontos-changelog \
             --current-version ${{ env.LATEST_VERSION }} \
             --next-version ${{ env.NEW_VERSION }} \
             --config changelog.toml \
-            --project openvas-scanner \
+            --project $PROJECT \
             --versioning-scheme semver \
             -o /tmp/changelog.md   || true
           # we would rather have empty release notes than no release
@@ -153,8 +154,8 @@ jobs:
           gh release create "$nrn" -F /tmp/changelog.md
           mkdir -p assets
           ls -las assets/
-          curl -Lo assets/$nrn.zip https://github.com/nichtsfrei/openvas-scanner/archive/refs/tags/$nrn.zip
-          curl -Lo assets/$nrn.tar.gz https://github.com/nichtsfrei/openvas-scanner/archive/refs/tags/$nrn.tar.gz
+          curl -Lo assets/$PROJECT-$nrn.zip https://github.com/${{ env.GITHUB_REPOSITORY }}/archive/refs/tags/$nrn.zip
+          curl -Lo assets/$PROJECT-$nrn.tar.gz https://github.com/${{ env.GITHUB_REPOSITORY }}/archive/refs/tags/$nrn.tar.gz
           echo -e "${{ secrets.GPG_KEY }}" > private.pgp
           echo ${{ secrets.GPG_PASSPHRASE }} | bash .github/sign-assets.sh private.pgp
           rm assets/$nrn.zip
